@@ -1,0 +1,11 @@
+(page "index.html"
+  (:require
+    [thelarch.rpc :as rpc]))
+
+(rpc/init)
+
+(html
+  (head
+    (link :href "app.css" :rel "stylesheet"))
+  (body
+    (h1 (text "Hello, Hoplon and Castra! ~{rpc/random-number}"))))
