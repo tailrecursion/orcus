@@ -1,4 +1,5 @@
 (ns thelarch.db
+  (:import java.util.Date)
   (:require [datomic.api :as d]))
 
 (def db-name (System/getProperty "user.name"))
@@ -50,10 +51,17 @@
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}
+   {:db/ident :node/list?
+    :db/doc "True if this is a root node and has a :root/title attribute."
+    :db/id (d/tempid :db.part/db)
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one
+    :db.install/_attribute :db.part/db}
    {:db/ident :list/versions
     :db/doc "Versions of the root named by a UUID"
     :db/id (d/tempid :db.part/db)
     :db/valueType :db.type/ref
+    :db/isComponent true
     :db/cardinality :db.cardinality/many
     :db.install/_attribute :db.part/db}
    {:db/ident :version/created-at
@@ -62,6 +70,28 @@
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}
+   ;; adding a version of a list
+   {:db/id (d/tempid :db.part/user)
+    :db/ident :add-version
+    :db/doc "Data function that adds a version of a list."
+    :db/fn (datomic.function/construct
+            '{:lang "clojure"
+              :params [db login list-uuid version-id]
+              :code (if-let [list-id (->> (d/q '[:find ?id :where
+                                                 [?id :node/uuid ?list-uuid]
+                                                 [?id :user/login ?login]
+                                                 [?id :node/list? true]]
+                                            db
+                                            list-uuid
+                                            login)
+                                          ffirst)]
+                      [{:db/id list-id
+                        :list/versions version-id}]
+                      [{:db/id (d/tempid :db.part/user)
+                        :node/list? true
+                        :node/uuid list-uuid
+                        :user/login login
+                        :list/versions version-id}])})}
    ;; users
    {:db/ident :user/login
     :db/doc "The user's login"
@@ -85,7 +115,7 @@
 
 (def test-tree
   [{:uuid #uuid "d7162151-c521-42f6-82ee-f686a4e2697b"
-    :text "my org mode"}
+    :text "my org mode !!!!!"}
    [{:uuid #uuid "d4cff8b0-da0d-4788-a12d-d522ff4f1edc"
      :text "a child"
      :status :in-progress
@@ -122,19 +152,18 @@
 (defn reset-db! []
   (d/delete-database db-uri)
   (d/create-database db-uri)
-  (d/transact conn schema)
-  (d/transact conn (tree->txes test-tree)))
+  (alter-var-root #'conn (fn [_] (d/connect db-uri)))
+  (d/transact conn schema))
 
-(defn children [db parent-uuid]
-  (->> (d/q '[:find ?uuid ?rank
-              :in $ ?parent-uuid
+(defn children [db parent-id]
+  (->> (d/q '[:find ?id ?rank
+              :in $ ?parent-id
               :where
-              [?parent-id :node/uuid ?parent-uuid]
-              [?eid :node/parent ?parent-id]
-              [?eid :node/uuid ?uuid]
-              [?eid :node/rank ?rank]]
+              [?id :node/parent ?parent-id]
+              [?id :node/uuid ?uuid]
+              [?id :node/rank ?rank]]
          db
-         parent-uuid)
+         parent-id)
        (sort-by peek)
        (mapv first)))
 
@@ -144,15 +173,45 @@
 (def public-attrs
   [:node/uuid :node/text :node/status :node/due-date])
 
-(defn hydrate [db uuid]
-  (let [root (d/pull db public-attrs [:node/uuid uuid])]
+(defn hydrate [db id]
+  (let [root (d/pull db public-attrs id)]
     (into [(pluck root)]
           (map (partial hydrate db)
-               (children db uuid)))))
+               (children db id))))) 
 
 (defn register! [gh-user]
   (let [tx [{:db/id (d/tempid :db.part/user)
-             :user/last-login (java.util.Date.)
+             :user/last-login (Date.)
              :user/login (:login gh-user)}]]
     @(d/transact conn tx)))
+
+(defn put-tree! [login tree]
+  (let [version-id    (d/tempid :db.part/user)
+        [root & kids] (tree->txes nil 0 tree)
+        version       (-> root
+                          (dissoc :node/parent :node/rank)
+                          (assoc :node/root? true
+                                 :version/created-at (Date.)))]
+    (d/transact conn (concat [version]
+                             kids
+                             [[:add-version login (:node/uuid version) (:db/id version)]]))))
+
+(defn get-latest-tree [db login uuid]
+  (->> (d/q '[:find ?id ?created-at
+              :in $ ?login ?uuid
+              :where
+              [?list :node/uuid          ?uuid]
+              [?list :node/list?         true]
+              [?list :user/login         ?login]
+              [?list :list/versions      ?id]
+              [?id   :node/root?         true]
+              [?id   :version/created-at ?created-at]]
+         db
+         login
+         uuid)
+       (sort-by second)
+       last
+       first
+       (hydrate db)))
+
 
