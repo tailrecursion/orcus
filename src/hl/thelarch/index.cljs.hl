@@ -78,7 +78,7 @@
 
 (defn logout! []
   (rpc/logout!)
-  (set! (.-location js/window) (.-location js/window)))
+  (.reload (.-location js/window)))
 
 (html
   (head
