@@ -52,8 +52,6 @@
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}])
 
-;; Scaffolding
-
 (def test-tree
   [{:id #uuid "d7162151-c521-42f6-82ee-f686a4e2697b"
     :text "my org mode"}
@@ -91,7 +89,7 @@
                    (range)
                    kids)))))
 
-(defn scaffold! []
+(defn seed! []
   (d/transact conn schema)
   (d/transact conn (tree->txes test-tree)))
 
