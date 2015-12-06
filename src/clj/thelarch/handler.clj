@@ -11,6 +11,9 @@
    [thelarch.api             :as api]
    [thelarch.github          :as gh]))
 
+(env/def
+  THELARCH_HOST "localhost:8000")
+
 (defroutes app-routes
   (GET "/" req
     (response/content-type (response/resource-response "index.html") "text/html"))
@@ -20,7 +23,7 @@
         @(db/register! user)
         {:status 302
          :cookies {"access-token" access-token}
-         :headers {"location" "http://localhost:8000/"}})))
+         :headers {"location" (format "http://%s/" THELARCH_HOST)}})))
   (route/resources "/" {:root ""}))
 
 (def app
