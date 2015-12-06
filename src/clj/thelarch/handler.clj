@@ -20,7 +20,7 @@
         @(db/register! user)
         {:status 302
          :cookies {"access-token" access-token}
-         :headers {"location" "http://localhost:8000/login.html"}})))
+         :headers {"location" "http://localhost:8000/"}})))
   (route/resources "/" {:root ""}))
 
 (def app
