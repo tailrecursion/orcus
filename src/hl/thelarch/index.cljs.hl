@@ -106,5 +106,11 @@
         (c/container
           :toggle (cell= (= route "#!/edit/"))
           (c/row (node (cell= (zip/root tree)))))
-        (c/container :toggle (cell= (= route "#!/help/")) (p "help"))
-        (c/container :toggle (cell= (= route "#!/about/")) (p "about")))))) 
+        (c/container :toggle (cell= (= route "#!/help/"))
+                     (p "Use vi movement keys.  i enters insert mode. ENT or c edit an existing item.  ESC reverts to normal mode.")
+                     (p "You can also select items with the mouse by clicking on them."))
+        (c/container :toggle (cell= (= route "#!/about/"))
+                     (p "TheLarch is a keyboard-driven outlining/note-taking tool inspired by Emacs 's org-mode.")
+                     (p "While org-mode is great, it 's difficult to interface org-mode with the rest of the world.  The vision for TheLarch is something like Emacs, but that is hosted on the web and supports integration with other software services, like Google Calendar and Trello.")
+                     (p "Navigation of lists is structural, using Vi movement keys.  Zippers are used to perform traversal.  We also implemented structural Datomic-based persistence of lists - in order to support arbitrary export formats - but it 's unlikely we 'll have that working by contest close")
+                     (p "The application was built using the Hoplon framework combined with Datomic."))))))
