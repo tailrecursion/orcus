@@ -2,6 +2,8 @@
   :dependencies '[[adzerk/boot-cljs          "1.7.170-3"]
                   [adzerk/env                "0.2.0"]
                   [adzerk/boot-reload        "0.4.2"]
+                  [cheshire                  "5.5.0"]
+                  [clj-http                  "2.0.0"]
                   [compojure                 "1.4.0"]
                   [hoplon/boot-hoplon        "0.1.10"]
                   [hoplon/castra             "3.0.0-SNAPSHOT"]
