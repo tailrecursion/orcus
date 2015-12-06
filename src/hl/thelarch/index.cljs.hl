@@ -39,7 +39,7 @@
 
 (defn ctrl-key [e]
   (let [k (.-which e)]
-    (cond (= 13 k) (swap! mode #(or (and (= % :normal) :insert) :normal))
+    (cond (= 13 k) (swap! mode #(get {:normal :insert} % :normal))
           (= 27 k) (reset! mode :normal)
           :else    (let [c (when (.-ctrlKey e) "C-")
                          m (when (.-metaKey e) "M-")]

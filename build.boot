@@ -10,8 +10,8 @@
                   [hoplon/hoplon             "6.0.0-alpha10"]
                   [org.clojure/clojure       "1.7.0"]
                   [org.clojure/clojurescript "1.7.189"]
-                  [pandeiro/boot-http        "0.7.0"]
-                  [ring                      "1.4.0"]
+                  [tailrecursion/boot-jetty  "0.1.1"]
+                  [ring/ring-core            "1.4.0"]
                   [ring/ring-defaults        "0.1.5"]
                   [com.datomic/datomic-pro   "0.9.5344"]]
   :repositories  #(into % [["datomic" {:url      "https://my.datomic.com/repo"
@@ -21,10 +21,10 @@
   :source-paths   #{"src/cljs" "src/hl"})
 
 (require
-  '[adzerk.boot-cljs      :refer [cljs]]
-  '[adzerk.boot-reload    :refer [reload]]
-  '[hoplon.boot-hoplon    :refer [hoplon prerender]]
-  '[pandeiro.boot-http    :refer [serve]])
+  '[adzerk.boot-cljs         :refer [cljs]]
+  '[adzerk.boot-reload       :refer [reload]]
+  '[hoplon.boot-hoplon       :refer [hoplon prerender]]
+  '[tailrecursion.boot-jetty :refer [serve]])
 
 (task-options!
   speak {:theme "ordinance"})
@@ -33,10 +33,9 @@
   "Build thelarch for local development."
   []
   (comp
-    (serve
-      :port    8000
-      :handler 'thelarch.handler/app
-      :reload  true)
+    (web :serve 'thelarch.handler/app)
+    (repl :server true)
+    (serve :port 8000)
     (watch)
     (speak)
     (hoplon)
