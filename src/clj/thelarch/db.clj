@@ -27,9 +27,9 @@
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}
    {:db/ident :node/uuid
-    :db/doc "The node's UUID"
+    :db/doc "The node's id for sharing purposes"
     :db/id (d/tempid :db.part/db)
-    :db/valueType :db.type/uuid
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}
    {:db/ident :node/status
@@ -114,20 +114,20 @@
     :db.install/_attribute :db.part/db}])
 
 (def test-tree
-  [{:uuid #uuid "d7162151-c521-42f6-82ee-f686a4e2697b"
+  [{:uuid  "d7162151-c521-42f6-82ee-f686a4e2697b"
     :text "my org mode !!!!!"}
-   [{:uuid #uuid "d4cff8b0-da0d-4788-a12d-d522ff4f1edc"
+   [{:uuid  "d4cff8b0-da0d-4788-a12d-d522ff4f1edc"
      :text "a child"
      :status :in-progress
      :due-date #inst "2015-12-05T17:44:44.511-00:00"}]
-   [{:uuid #uuid "f322deac-783e-4c68-b7ee-78eb2a30aabb"
+   [{:uuid  "f322deac-783e-4c68-b7ee-78eb2a30aabb"
      :text "another child"
      :status :in-progress
      :due-date #inst "2015-12-05T17:44:44.511-00:00"}
-    [{:uuid #uuid "a64f2d05-db25-4d1c-a042-f8cb1c9a0bb7"
+    [{:uuid  "a64f2d05-db25-4d1c-a042-f8cb1c9a0bb7"
       :text "inner dude the first"
       :status :complete}]]
-   [{:uuid #uuid "8295b35d-2294-4a8b-b01c-ba0dfc7cd75c"
+   [{:uuid  "8295b35d-2294-4a8b-b01c-ba0dfc7cd75c"
      :text "yet another child"
      :status :complete}]])
 
