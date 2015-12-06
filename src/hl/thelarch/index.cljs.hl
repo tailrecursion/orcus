@@ -45,10 +45,9 @@
           point?   (cell= (= item (zip/item tree)))
           editing? (cell= (and point? (= mode :insert)))
           classes  (cell= {:editing editing? :point point?})]
-      (div :click #(when (= @mode :normal)
-                     (swap! tree zip/goto @z))
-           (p :class classes
+      (div (p :class classes
               :toggle (cell= (not editing?))
+              :click #(when (= @mode :normal) (swap! tree zip/goto @z))
               text)
            (input :type "text"
                   :toggle editing?
