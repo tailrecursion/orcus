@@ -61,7 +61,6 @@
       (-> z (zip/left) (zip/append-child (zip/node z)) zip/right zip/remove (goto z))))
 
 (defn set-text [z x]
-  (prn (item z))
   (zip/edit z update-in [0] assoc :text x))
 
 (defn delete [z]

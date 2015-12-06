@@ -27,8 +27,6 @@
 
 (def route (route-cell "#!/edit/"))
 
-(cell= (pr :route route))
-
 (defmulti  keymap (fn [mode key] [mode key]))
 (defmethod keymap [:normal "j"] [_ _] (swap! tree zip/next))
 (defmethod keymap [:normal "k"] [_ _] (swap! tree zip/prev))
@@ -38,9 +36,9 @@
 (defmethod keymap [:normal "i"] [_ _] (dosync (swap! tree zip/create-left) (reset! mode :insert)))
 (defmethod keymap [:normal "a"] [_ _] (dosync (swap! tree zip/create-right) (reset! mode :insert)))
 (defmethod keymap [:normal "o"] [_ _] (dosync (swap! tree zip/create-child) (reset! mode :insert)))
-(defmethod keymap [:normal "O"] [_ _] (dosync (swap! tree zip/create-parent) (reset! mode :insert)))
+;(defmethod keymap [:normal "O"] [_ _] (dosync (swap! tree zip/create-parent) (reset! mode :insert)))
 (defmethod keymap [:normal "c"] [_ _] (reset! mode :insert))
-(defmethod keymap :default [m k] (.log js/console "No %s mode binding for key '%s'" (str m) k))
+(defmethod keymap :default [m k] #_(.log js/console "No %s mode binding for key '%s'" (str m) k))
 
 (defn ctrl-key [e]
   (let [k (.-which e)]
@@ -107,7 +105,17 @@
           :toggle (cell= (= route "#!/edit/"))
           (c/row (node (cell= (zip/root tree)))))
         (c/container :toggle (cell= (= route "#!/help/"))
-                     (p "Use vi movement keys.  i enters insert mode. ENT or c edit an existing item.  ESC reverts to normal mode.")
+                     (p "Use vi movement keys:")
+                     (ul
+                       (li (code "j") " next item")
+                       (li (code "k") " previous item")
+                       (li (code "c") " edit current item")
+                       (li (code "i") " insert item before point")
+                       (li (code "a") " insert item after point")
+                       (li (code "o") " insert item as child of point")
+                       (li (code ">") " increase indentation level")
+                       (li (code "<") " decrease indentation level")
+                       (li (code "ESC/ENTER") " return to normal mode"))
                      (p "You can also select items with the mouse by clicking on them."))
         (c/container :toggle (cell= (= route "#!/about/"))
                      (p "TheLarch is a keyboard-driven outlining/note-taking tool inspired by Emacs 's org-mode.")
