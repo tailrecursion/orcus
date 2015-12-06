@@ -76,17 +76,19 @@
                (children db root-uuid)))))
 
 (defn hydrate-root-uuid [db root-uuid]
-  (when (-> '[:find ?id
+  )
+
+(defrpc get-tree [uuid]
+  (let [db (d/db conn)]
+    (if (-> '[:find ?id
               :in $ ?uuid
               :where
               [?id :node/id ?uuid]
               [?id :node/root? true]]
-            (d/q db root-uuid)
+            db
             ffirst)
-    (hydrate db root-uuid)))
-
-(defrpc get-state []
-  {:random (rand-int 100)})
+      (hydrate db root-uuid)
+      (throw (ex-info "Tree not found" {:uuid uuid})))))
 
 (comment
   (def tree
