@@ -67,6 +67,8 @@
                   :keypress #(swap! tree zip/set-text @%))
            (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
 
+(defc tab :edit)
+
 (html
   (head
     (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
@@ -84,9 +86,9 @@
           (span :class "navbar-brand" :href "#" "The Larch"))
         (div :id "navbar" :class "collapse navbar-collapse"
           (ul :class "nav navbar-nav"
-            (li :class "active" (a :href "#" "Edit"))
-            (li (a :href "#about" "Help"))
-            (li (a :href "#contact" "About")))
+            (li (a :href "#" :click #(reset! tab :edit) "Edit"))
+            (li (a :href "#" :click #(reset! tab :help) "Help"))
+            (li (a :href "#" :click #(reset! tab :about)"About")))
           (span :toggle user
             :class "pull-right navbar-text"
             (button
@@ -104,8 +106,10 @@
                        "Log in with GitHub")))))))
     (div :class "container"
       (div :class "main"
-        (div :class "row"
-          (div :class "span8"
-            (node (cell= (zip/root tree))))
-          (div :class "span4")
-          )))))
+        (div :class "container" :toggle (cell= (= tab :edit))
+          (div :class "row"
+            (node (cell= (zip/root tree)))))
+        (div :class "container" :toggle (cell= (= tab :help))
+          (p "help"))
+        (div :class "container" :toggle (cell= (= tab :about))
+          (p "about")))))) 
