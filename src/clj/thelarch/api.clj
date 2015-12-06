@@ -1,22 +1,15 @@
 (ns thelarch.api
   (:require [thelarch.db :as db]
             [thelarch.github :as gh]
-            [castra.core :refer [defrpc *session*]]))
+            [castra.core :refer [defrpc *session*]]
+            [javelin.core :refer [with-let]]))
 
 (defrpc get-user [access-token]
-  (gh/get-user access-token))
+  (with-let [user (gh/get-user access-token)]
+    (swap! *session* assoc :user user)))
 
-;; (defrpc get-tree [uuid]
-;;   (let [db (d/db conn)]
-;;     (if (-> '[:find ?id
-;;               :in $ ?uuid
-;;               :where
-;;               [?id :node/uuid ?uuid]
-;;               [?id :node/root? true]]
-;;             (d/q db uuid)
-;;             ffirst)
-;;       (hydrate db uuid)
-;;       (throw (ex-info "Tree not found" {:uuid uuid})))))
-
-;; (defrpc put-tree! [tree]
-;;   (d/transact conn (tree->txes test-tree)))
+(defrpc put-tree [tree]
+  {:rpc/pre [(:user @*session*)]}
+  (let [login (get-in @*session* [:user :login])]
+    @(db/put-tree! login tree)
+    (db/get-latest-tree login (get-in tree [0 :uuid]))))

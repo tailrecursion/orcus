@@ -17,7 +17,7 @@
   (GET "/github-callback" {{session-code :code} :params}
     (when-let [access-token (gh/get-access-token session-code)]
       (let [user (gh/get-user access-token)]
-        (db/register! user)
+        @(db/register! user)
         {:status 302
          :cookies {"access-token" access-token}
          :headers {"location" "http://localhost:8000/login.html"}})))

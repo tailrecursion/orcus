@@ -13,6 +13,12 @@
 
 (defc= random-number (get state :random))
 
+(defn pr-ex [ex]
+  (when-let [stack (and ex (.-serverStack ex))]
+    (.groupCollapsed js/console "RPC error: %s" (:message ex))
+    (.error js/console stack)
+    (.groupEnd js/console)))
+
 (def get-state
   (mkremote 'thelarch.api/get-state state error loading))
 
@@ -26,6 +32,11 @@
 
 (defn init []
   (get-user (.get (get-cookies) "access-token")))
+
+(defc tree nil)
+
+(def put-tree
+  (mkremote 'thelarch.api/put-tree tree error loading {:on-error pr-ex}))
 
 (defn logout! []
   (.remove cks "access-token")

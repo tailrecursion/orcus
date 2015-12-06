@@ -160,7 +160,6 @@
               :in $ ?parent-id
               :where
               [?id :node/parent ?parent-id]
-              [?id :node/uuid ?uuid]
               [?id :node/rank ?rank]]
          db
          parent-id)
@@ -177,13 +176,13 @@
   (let [root (d/pull db public-attrs id)]
     (into [(pluck root)]
           (map (partial hydrate db)
-               (children db id))))) 
+               (children db id)))))
 
 (defn register! [gh-user]
   (let [tx [{:db/id (d/tempid :db.part/user)
              :user/last-login (Date.)
              :user/login (:login gh-user)}]]
-    @(d/transact conn tx)))
+    (d/transact conn tx)))
 
 (defn put-tree! [login tree]
   (let [version-id    (d/tempid :db.part/user)
@@ -196,22 +195,25 @@
                              kids
                              [[:add-version login (:node/uuid version) (:db/id version)]]))))
 
-(defn get-latest-tree [db login uuid]
-  (->> (d/q '[:find ?id ?created-at
-              :in $ ?login ?uuid
-              :where
-              [?list :node/uuid          ?uuid]
-              [?list :node/list?         true]
-              [?list :user/login         ?login]
-              [?list :list/versions      ?id]
-              [?id   :node/root?         true]
-              [?id   :version/created-at ?created-at]]
-         db
-         login
-         uuid)
-       (sort-by second)
-       last
-       first
-       (hydrate db)))
+(defn get-latest-tree
+  ([login uuid]
+   (get-latest-tree (d/db conn) login uuid))
+  ([db login uuid]
+   (->> (d/q '[:find ?id ?created-at
+               :in $ ?login ?uuid
+               :where
+               [?list :node/uuid          ?uuid]
+               [?list :node/list?         true]
+               [?list :user/login         ?login]
+               [?list :list/versions      ?id]
+               [?id   :node/root?         true]
+               [?id   :version/created-at ?created-at]]
+          db
+          login
+          uuid)
+        (sort-by second)
+        last
+        first
+        (hydrate db))))
 
 
