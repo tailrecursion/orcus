@@ -69,11 +69,42 @@
 
 (html
   (head
+    (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
+      :integrity "sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" :crossorigin "anonymous")
     (link :href "app.css" :rel "stylesheet"))
   (body :keyup ctrl-key :keypress cmd-key
-    (p (text "~{mode}"))
-    (node (cell= (zip/root tree)))
-    (a :href (str "https://github.com/login/oauth/authorize?client_id="
-                  THELARCH_GH_BASIC_CLIENT_ID)
-      "Log in with GitHub")
-    (pre (cell= (str "Current user: " (pr-str user))))))
+    (nav :class "navbar navbar-inverse navbar-fixed-top"
+      (div :class "container container-fluid"
+        (div :class "navbar-header"
+          (button :type "button" :class "navbar-toggle collapsed" :data-toggle "collapse" :data-target "#navbar" :aria-expanded "false" :aria-controls "navbar"
+            (span :class "sr-only" "Toggle navigation")
+            (span :class "icon-bar")
+            (span :class "icon-bar")
+            (span :class "icon-bar"))
+          (span :class "navbar-brand" :href "#" "The Larch"))
+        (div :id "navbar" :class "collapse navbar-collapse"
+          (ul :class "nav navbar-nav"
+            (li :class "active" (a :href "#" "Edit"))
+            (li (a :href "#about" "Help"))
+            (li (a :href "#contact" "About")))
+          (button
+            :toggle user
+            :click #(do (rpc/logout!)
+                        (set! (.-location js/window) (.-location js/window)))
+            :class "navbar-text pull-right" "Log out")
+          (span :class "navbar-text pull-right"
+            (img :toggle user :src (cell= (:avatar_url user)))
+            (cell= (if user
+                     (:login user)
+                     (button :type "submit" :class "btn btn-default"
+                       :click #(set! (.-location js/window)
+                                     (str "https://github.com/login/oauth/authorize?client_id="
+                                          THELARCH_GH_BASIC_CLIENT_ID))
+                       "Log in with GitHub")))))))
+    (div :class "container"
+      (div :class "main"
+        (div :class "row"
+          (div :class "span8"
+            (node (cell= (zip/root tree))))
+          (div :class "span4")
+          )))))

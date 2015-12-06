@@ -1,9 +1,15 @@
-@import url(http://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Droid+Serif);
-
-body {
-    font-family: 'Droid Sans';
+.navbar-text img {
+  max-height:25px;
+  width:auto;
+  vertical-align:middle;
+  padding-right: 10px;
 }
-
+body {
+    padding-top: 50px;
+}
+.main {
+  padding: 40px 15px;
+}
 .point {
   color: red;
 }
