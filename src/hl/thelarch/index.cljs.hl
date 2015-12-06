@@ -28,13 +28,12 @@
 (defmethod keymap :default [m k] (.log js/console "No %s mode binding for key '%s'" (str m) k))
 
 (defn ctrl-key [e]
-  (if (= 27 (.-which e))
-    (reset! mode :normal)
-    (let [c (when (.-ctrlKey e) "C-")
-          m (when (.-metaKey e) "M-")
-          k (.fromCharCode js/String (.-which e))]
-      (when (or c m)
-        (keymap @mode (str c m k))))))
+  (let [k (.-which e)]
+    (if (or (= 27 k) (= 13 k))
+      (reset! mode :normal)
+      (let [c (when (.-ctrlKey e) "C-")
+            m (when (.-metaKey e) "M-")]
+        (when (or c m) (keymap @mode (str c m (.fromCharCode js/String k))))))))
 
 (defn cmd-key [e]
   (keymap @mode (.fromCharCode js/String (.-which e))))

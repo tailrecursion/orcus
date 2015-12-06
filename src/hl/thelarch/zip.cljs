@@ -67,4 +67,6 @@
   (or (root? z) (zip/remove z)))
 
 (defn create [z]
-  (-> z (zip/insert-right (make-node "")) zip/right))
+  (if (root? z)
+    (-> z (zip/insert-child (make-node "")) zip/down)
+    (-> z (zip/insert-right (make-node "")) zip/right)))
