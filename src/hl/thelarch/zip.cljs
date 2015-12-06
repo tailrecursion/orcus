@@ -61,12 +61,26 @@
       (-> z (zip/left) (zip/append-child (zip/node z)) zip/right zip/remove (goto z))))
 
 (defn set-text [z x]
+  (prn (item z))
   (zip/edit z update-in [0] assoc :text x))
 
 (defn delete [z]
-  (or (root? z) (zip/remove z)))
+  (or (root? z)
+      (let [m (or (zip/right z) (prev z))]
+        (-> z zip/remove (goto m)))))
 
-(defn create [z]
+(defn create-left [z]
+  (if (root? z)
+    (-> z (zip/insert-child (make-node "")) zip/down)
+    (-> z (zip/insert-left (make-node "")) zip/left)))
+
+(defn create-right [z]
   (if (root? z)
     (-> z (zip/insert-child (make-node "")) zip/down)
     (-> z (zip/insert-right (make-node "")) zip/right)))
+
+(defn create-child [z]
+  (-> z (zip/insert-child (make-node "")) zip/down))
+
+(defn create-parent [z]
+  )

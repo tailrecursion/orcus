@@ -23,17 +23,20 @@
 (defmethod keymap [:normal ">"] [_ _] (swap! tree zip/indent))
 (defmethod keymap [:normal "<"] [_ _] (swap! tree zip/outdent))
 (defmethod keymap [:normal "x"] [_ _] (swap! tree zip/delete))
-(defmethod keymap [:normal "o"] [_ _] (swap! tree zip/create) (reset! mode :insert))
-(defmethod keymap [:normal "i"] [_ _] (reset! mode :insert))
+(defmethod keymap [:normal "i"] [_ _] (dosync (swap! tree zip/create-left) (reset! mode :insert)))
+(defmethod keymap [:normal "a"] [_ _] (dosync (swap! tree zip/create-right) (reset! mode :insert)))
+(defmethod keymap [:normal "o"] [_ _] (dosync (swap! tree zip/create-child) (reset! mode :insert)))
+(defmethod keymap [:normal "O"] [_ _] (dosync (swap! tree zip/create-parent) (reset! mode :insert)))
+(defmethod keymap [:normal "c"] [_ _] (reset! mode :insert))
 (defmethod keymap :default [m k] (.log js/console "No %s mode binding for key '%s'" (str m) k))
 
 (defn ctrl-key [e]
   (let [k (.-which e)]
-    (if (or (= 27 k) (= 13 k))
-      (reset! mode :normal)
-      (let [c (when (.-ctrlKey e) "C-")
-            m (when (.-metaKey e) "M-")]
-        (when (or c m) (keymap @mode (str c m (.fromCharCode js/String k))))))))
+    (cond (= 13 k) (swap! mode #(or (and (= % :normal) :insert) :normal))
+          (= 27 k) (reset! mode :normal)
+          :else    (let [c (when (.-ctrlKey e) "C-")
+                         m (when (.-metaKey e) "M-")]
+                     (when (or c m) (keymap @mode (str c m (.fromCharCode js/String k))))))))
 
 (defn cmd-key [e]
   (keymap @mode (.fromCharCode js/String (.-which e))))
@@ -53,7 +56,7 @@
                   :toggle editing?
                   :focus editing?
                   :value text
-                  :keyup #(swap! tree zip/set-text @%))
+                  :keypress #(swap! tree zip/set-text @%))
            (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
 
 (html
