@@ -1,71 +1,66 @@
 (page "index.html"
   (:require
-    [clojure.zip :as zip]
+    [thelarch.zip :as zip]
     [thelarch.rpc :as rpc]))
 
-(def tree
+(def test-data
   [{:id 1 :text "my org mode document"}
    [{:id 2 :text "a child"}]
    [{:id 3 :text "another child"}
-    [{:id 4 :text "inner dude the first"}]]
+    [{:id 4 :text "inner dude the first"}]
+    [{:id 6 :text "inner dude the second"}]
+    [{:id 7 :text "inner dude the third"}]]
    [{:id 5 :text "yet another child"}]])
 
 (def indexed (partial map-indexed list))
 
-(defn node*     [z] (when z (zip/node z)))
-(defn children* [z] (when (and z (zip/branch? z)) (zip/children z)))
-(defn up*       [z] (when z (or (and (first (zip/up z)) (zip/up z)) z)))
-(defn down*     [z] (when z (or (and (first (zip/down z)) (zip/down z)) z)))
-(defn left*     [z] (when z (or (and (first (zip/left z)) (zip/left z)) z)))
-(defn right*    [z] (when z (or (and (first (zip/right z)) (zip/right z)) z)))
+(defc mode :normal)
+(defc tree (zip/zipper test-data))
 
-(defn next* [z]
-  (when z
-    (let [zz  (zip/next z)
-          zz' (when zz (zip/next zz))]
-      (cond (node* zz)  zz
-            (node* zz') zz'))))
+(defmulti  keymap (fn [mode key] [mode key]))
+(defmethod keymap [:normal "j"] [_ _] (swap! tree zip/next))
+(defmethod keymap [:normal "k"] [_ _] (swap! tree zip/prev))
+(defmethod keymap [:normal ">"] [_ _] (swap! tree zip/indent))
+(defmethod keymap [:normal "<"] [_ _] (swap! tree zip/outdent))
+(defmethod keymap [:normal "x"] [_ _] (swap! tree zip/delete))
+(defmethod keymap [:normal "o"] [_ _] (swap! tree zip/create) (reset! mode :insert))
+(defmethod keymap [:normal "i"] [_ _] (reset! mode :insert))
+(defmethod keymap :default [m k] (.log js/console "No %s mode binding for key '%s'" (str m) k))
 
-(defn prev* [z]
-  (when z
-    (let [zz  (zip/prev z)
-          zz' (when zz (zip/prev zz))]
-      (cond (node* zz)  zz
-            (node* zz') zz'))))
+(defn ctrl-key [e]
+  (if (= 27 (.-which e))
+    (reset! mode :normal)
+    (let [c (when (.-ctrlKey e) "C-")
+          m (when (.-metaKey e) "M-")
+          k (.fromCharCode js/String (.-which e))]
+      (when (or c m)
+        (keymap @mode (str c m k))))))
 
-(defc ztree (zip/zipper vector? rest into tree))
-(defc point (:id (first (zip/node @ztree))))
+(defn cmd-key [e]
+  (keymap @mode (.fromCharCode js/String (.-which e))))
 
-(cell= (prn (zip/node ztree)))
-
-(defn zkids
-  [ztree]
-  (when (seq (children* ztree))
-    (some->> ztree zip/down (iterate zip/right) (take-while identity))))
-
-(defn zroot
-  [ztree]
-  (->> ztree (iterate zip/up) (take-while identity) last))
-
-(defn znode
-  [ztree]
-  (cell-let [{:keys [id text]} (cell= (first (node* ztree)))]
-    (div
-      (p :click #(reset! point @id)
-         :class (cell= {:point (= id point)})
-         :text text)
-      (ul
-        (loop-tpl
-          :bindings [[i kid] (cell= (indexed (zkids ztree)))]
-          (li (znode kid)))))))
+(defn node
+  [z]
+  (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
+    (let [kids     (cell= (indexed (zip/children z)))
+          point?   (cell= (= item (zip/item tree)))
+          editing? (cell= (and point? (= mode :insert)))
+          classes  (cell= {:editing editing? :point point?})]
+      (div :click #(when (= @mode :normal)
+                     (swap! tree zip/goto @z))
+           (p :class classes
+              :toggle (cell= (not editing?))
+              text)
+           (input :type "text"
+                  :toggle editing?
+                  :focus editing?
+                  :value text
+                  :keyup #(swap! tree zip/set-text @%))
+           (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
 
 (html
   (head
     (link :href "app.css" :rel "stylesheet"))
-  (body
-    :keypress #(.log js/console (.fromCharCode js/String (.-which %)))
-    :keypress #(do (case (.fromCharCode js/String (.-which %))
-                     "j" (swap! ztree next*)
-                     "k" (swap! ztree prev*))
-                   (reset! point (:id (first (zip/node @ztree)))))
-    (znode (cell= (zroot ztree)))))
+  (body :keyup ctrl-key :keypress cmd-key
+        (p (text "~{mode}"))
+        (node (cell= (zip/root tree)))))

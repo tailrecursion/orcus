@@ -10,3 +10,7 @@ h1 {
 .point {
   color: red;
 }
+
+.editing {
+  border: 1px dashed red;
+}

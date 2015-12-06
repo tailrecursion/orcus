@@ -1,0 +1,70 @@
+(ns thelarch.zip
+  (:refer-clojure :exclude [next])
+  (:require [clojure.zip :as zip]))
+
+(defn- root?     [z] (and (= (zip/root z) (zip/node z)) z))
+(defn- children* [z] (when (and z (zip/branch? z)) (zip/children z)))
+(defn- up*       [z] (when z (or (and (first (zip/up z)) (zip/up z)) z)))
+(defn- down*     [z] (when z (or (and (first (zip/down z)) (zip/down z)) z)))
+(defn- left*     [z] (when z (or (and (first (zip/left z)) (zip/left z)) z)))
+(defn- right*    [z] (when z (or (and (first (zip/right z)) (zip/right z)) z)))
+
+;; public helpers
+
+(defn make-node [x]
+  [{:id (gensym) :text x}])
+
+(defn zipper [tree]
+  (zip/zipper vector? cljs.core/next #(into [(first %1)] %2) tree))
+
+(defn root [z]
+  (when z (->> z (iterate zip/up) (take-while identity) last)))
+
+(defn node [z]
+  (when z (zip/node z)))
+
+(defn children [z]
+  (when (and z (seq (children* z)))
+    (some->> z zip/down (iterate zip/right) (take-while identity))))
+
+(defn item [z]
+  (when z (first (zip/node z))))
+
+(defn id-for [z]
+  (when z (:id (item z))))
+
+;; public api
+
+(defn goto [z z']
+  (loop [z (root z)]
+    (or (and (= (id-for z) (id-for z')) z)
+        (recur (zip/next z)))))
+
+(def edit zip/edit)
+
+(defn next [z]
+  (let [zz  (zip/next z)
+        zz' (when zz (zip/next zz))]
+    (or (and (root? zz) z) (cond (node zz) zz (node zz') zz'))))
+
+(defn prev [z]
+  (let [zz  (zip/prev z)
+        zz' (when zz (zip/prev zz))]
+    (or (root? z) (cond (node zz) zz (node zz') zz'))))
+
+(defn outdent [z]
+  (or (and (or (root? z) (root? (zip/up z))) z)
+      (-> z zip/remove (goto (zip/up z)) (zip/insert-right (zip/node z)) (goto z))))
+
+(defn indent [z]
+  (or (and (not (zip/left z)) z)
+      (-> z (zip/left) (zip/append-child (zip/node z)) zip/right zip/remove (goto z))))
+
+(defn set-text [z x]
+  (zip/edit z update-in [0] assoc :text x))
+
+(defn delete [z]
+  (or (root? z) (zip/remove z)))
+
+(defn create [z]
+  (-> z (zip/insert-right (make-node "")) zip/right))
