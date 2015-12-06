@@ -87,11 +87,12 @@
             (li :class "active" (a :href "#" "Edit"))
             (li (a :href "#about" "Help"))
             (li (a :href "#contact" "About")))
-          (button
-            :toggle user
-            :click #(do (rpc/logout!)
-                        (set! (.-location js/window) (.-location js/window)))
-            :class "navbar-text pull-right" "Log out")
+          (span :toggle user
+            :class "pull-right navbar-text"
+            (button
+              :click #(do (rpc/logout!)
+                          (set! (.-location js/window) (.-location js/window)))
+              :class "btn btn-default" "Log out"))
           (span :class "navbar-text pull-right"
             (img :toggle user :src (cell= (:avatar_url user)))
             (cell= (if user
