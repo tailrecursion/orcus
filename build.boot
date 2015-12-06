@@ -13,6 +13,7 @@
                   [tailrecursion/boot-jetty  "0.1.1"]
                   [ring/ring-core            "1.4.0"]
                   [ring/ring-defaults        "0.1.5"]
+                  [ring/ring-devel           "1.4.0"]
                   [com.datomic/datomic-pro   "0.9.5344"]]
   :repositories  #(into % [["datomic" {:url      "https://my.datomic.com/repo"
                                        :username (System/getenv "THELARCH_DATOMIC_REPO_USERNAME")

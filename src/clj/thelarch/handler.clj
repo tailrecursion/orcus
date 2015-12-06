@@ -9,7 +9,8 @@
    [castra.core              :refer [*session*]]
    [thelarch.db              :as db]
    [thelarch.api             :as api]
-   [thelarch.github          :as gh]))
+   [thelarch.github          :as gh]
+   [ring.middleware.reload   :refer [wrap-reload]]))
 
 (env/def
   THELARCH_HOST "localhost:8000")
@@ -28,6 +29,7 @@
 
 (def app
   (-> app-routes
+      (wrap-reload {:dirs (vec (get boot.pod/env :directories))})
       (castra/wrap-castra 'thelarch.api)
       (castra/wrap-castra-session "a 16-byte secret")
       (d/wrap-defaults (merge d/api-defaults {:cookies true}))))
