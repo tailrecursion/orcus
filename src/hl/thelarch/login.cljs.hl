@@ -1,20 +1,13 @@
 (page "login.html"
   (:require
-   [thelarch.rpc :as rpc :refer [user]]
-   [goog.net.Cookies])
-  (:require-macros [adzerk.env :as env]))
-
-(def cks (goog.net.Cookies. js/document))
-
-(defn get-cookies []
-  (reduce #(assoc %1 %2 (.get cks %2)) {} (.getKeys cks)))
-
-(rpc/get-user (get (get-cookies) "access-token"))
+   [thelarch.rpc :as rpc :refer [user]])
+  (:require-macros
+   [adzerk.env :as env]))
 
 (env/def
   THELARCH_GH_BASIC_CLIENT_ID :required)
 
-(defc= logged-in? user)
+(rpc/init)
 
 (html
   (head
@@ -22,11 +15,10 @@
   (body
     (h1 "Login page")
     (pre (cell= (str "You are: " (pr-str user))))
-    (button :click #(do (.remove cks "login")
-                   (reset! user nil))
-      :toggle logged-in?
+    (button :toggle (cell= user)
+      :click rpc/logout!
       "Log out")
-    (a :href (str "https://github.com/login/oauth/authorize?client_id="
-                  THELARCH_GH_BASIC_CLIENT_ID)
-      :toggle (cell= (not logged-in?))
-      "Log in with GitHub")))
+    (p :toggle (cell= (not user))
+      (a :href (str "https://github.com/login/oauth/authorize?client_id="
+                    THELARCH_GH_BASIC_CLIENT_ID) 
+        "Log in with GitHub"))))
