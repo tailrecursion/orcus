@@ -1,0 +1,32 @@
+(ns thelarch.components
+  (:refer-hoplon :exclude [main])
+  )
+
+(defelem bootstrap [_ _]
+  (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
+        :integrity "sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" :crossorigin "anonymous"))
+
+(defelem navbar [{:keys [title home]} kids]
+  (nav :class "navbar navbar-inverse navbar-fixed-top"
+       (div :class "container container-fluid"
+            (div :class "navbar-header"
+                 (span :class "navbar-brand" :href home title))
+            (div :id "navbar" :class "navbar-collapse" kids))))
+
+(defelem navbar-nav [{:keys [route]} kids]
+  (ul :class "nav navbar-nav"
+      (->> kids (map #(let [href (.attr (js/jQuery %) "href")]
+                        (li :class (cell= {:active (= route href)}) %))))))
+
+(defelem navbar-text [attr kids]
+  (span (merge attr {:class "pull-right navbar-text"}) kids))
+
+(defelem container [attr kids]
+  (div (merge attr {:class "container"}) kids))
+
+(defelem main [attr kids]
+  (div (merge attr {:class "main"}) kids))
+
+(defelem row [attr kids]
+  (div (merge attr {:class "row"}) kids))
+

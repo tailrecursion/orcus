@@ -1,6 +1,7 @@
 (page "index.html"
   (:require
     [thelarch.zip :as zip]
+    [thelarch.components :as c]
     [thelarch.rpc :as rpc :refer [user]])
   (:require-macros
    [adzerk.env :as env]))
@@ -23,6 +24,10 @@
 
 (defc mode :normal)
 (defc tree (zip/zipper test-data))
+
+(def route (route-cell "#!/edit/"))
+
+(cell= (pr :route route))
 
 (defmulti  keymap (fn [mode key] [mode key]))
 (defmethod keymap [:normal "j"] [_ _] (swap! tree zip/next))
@@ -48,8 +53,7 @@
 (defn cmd-key [e]
   (keymap @mode (.fromCharCode js/String (.-which e))))
 
-(defn node
-  [z]
+(defn node [z]
   (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
     (let [kids     (cell= (indexed (zip/children z)))
           point?   (cell= (= item (zip/item tree)))
@@ -67,49 +71,40 @@
                   :keypress #(swap! tree zip/set-text @%))
            (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
 
-(defc tab :edit)
+(defn login! []
+  (set! (.-location js/window)
+        (str "https://github.com/login/oauth/authorize?client_id="
+             THELARCH_GH_BASIC_CLIENT_ID)))
+
+(defn logout! []
+  (rpc/logout!)
+  (set! (.-location js/window) (.-location js/window)))
 
 (html
   (head
-    (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
-      :integrity "sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" :crossorigin "anonymous")
+    (c/bootstrap)
     (link :href "app.css" :rel "stylesheet"))
-  (body :keyup ctrl-key :keypress cmd-key
-    (nav :class "navbar navbar-inverse navbar-fixed-top"
-      (div :class "container container-fluid"
-        (div :class "navbar-header"
-          (button :type "button" :class "navbar-toggle collapsed" :data-toggle "collapse" :data-target "#navbar" :aria-expanded "false" :aria-controls "navbar"
-            (span :class "sr-only" "Toggle navigation")
-            (span :class "icon-bar")
-            (span :class "icon-bar")
-            (span :class "icon-bar"))
-          (span :class "navbar-brand" :href "#" "The Larch"))
-        (div :id "navbar" :class "collapse navbar-collapse"
-          (ul :class "nav navbar-nav"
-            (li (a :href "#" :click #(reset! tab :edit) "Edit"))
-            (li (a :href "#" :click #(reset! tab :help) "Help"))
-            (li (a :href "#" :click #(reset! tab :about)"About")))
-          (span :toggle user
-            :class "pull-right navbar-text"
-            (button
-              :click #(do (rpc/logout!)
-                          (set! (.-location js/window) (.-location js/window)))
-              :class "btn btn-default" "Log out"))
-          (span :class "navbar-text pull-right"
-            (img :toggle user :src (cell= (:avatar_url user)))
-            (cell= (if user
-                     (:login user)
-                     (button :type "submit" :class "btn btn-default"
-                       :click #(set! (.-location js/window)
-                                     (str "https://github.com/login/oauth/authorize?client_id="
-                                          THELARCH_GH_BASIC_CLIENT_ID))
-                       "Log in with GitHub")))))))
-    (div :class "container"
-      (div :class "main"
-        (div :class "container" :toggle (cell= (= tab :edit))
-          (div :class "row"
-            (node (cell= (zip/root tree)))))
-        (div :class "container" :toggle (cell= (= tab :help))
-          (p "help"))
-        (div :class "container" :toggle (cell= (= tab :about))
-          (p "about")))))) 
+  (body
+    :keyup ctrl-key :keypress cmd-key
+    (c/navbar
+      :title "The Larch" :home "#!/edit/"
+      (c/navbar-nav
+        :route route
+        (a :href "#!/edit/"  "Edit")
+        (a :href "#!/help/"  "Help")
+        (a :href "#!/about/" "About"))
+      (c/navbar-text
+        :toggle user
+        (a :click logout! "Log out"))
+      (c/navbar-text
+        (img :toggle user :src (cell= (:avatar_url user)))
+        (cell= (if user
+                 (:login user)
+                 (a :click login! "Log in with GitHub")))))
+    (c/container
+      (c/main
+        (c/container
+          :toggle (cell= (= route "#!/edit/"))
+          (c/row (node (cell= (zip/root tree)))))
+        (c/container :toggle (cell= (= route "#!/help/")) (p "help"))
+        (c/container :toggle (cell= (= route "#!/about/")) (p "about")))))) 
