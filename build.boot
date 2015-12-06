@@ -26,6 +26,9 @@
   '[hoplon.boot-hoplon    :refer [hoplon prerender]]
   '[pandeiro.boot-http    :refer [serve]])
 
+(task-options!
+  speak {:theme "ordinance"})
+
 (deftask dev
   "Build thelarch for local development."
   []

@@ -1,11 +1,71 @@
 (page "index.html"
   (:require
+    [clojure.zip :as zip]
     [thelarch.rpc :as rpc]))
 
-(rpc/init)
+(def tree
+  [{:id 1 :text "my org mode document"}
+   [{:id 2 :text "a child"}]
+   [{:id 3 :text "another child"}
+    [{:id 4 :text "inner dude the first"}]]
+   [{:id 5 :text "yet another child"}]])
+
+(def indexed (partial map-indexed list))
+
+(defn node*     [z] (when z (zip/node z)))
+(defn children* [z] (when (and z (zip/branch? z)) (zip/children z)))
+(defn up*       [z] (when z (or (and (first (zip/up z)) (zip/up z)) z)))
+(defn down*     [z] (when z (or (and (first (zip/down z)) (zip/down z)) z)))
+(defn left*     [z] (when z (or (and (first (zip/left z)) (zip/left z)) z)))
+(defn right*    [z] (when z (or (and (first (zip/right z)) (zip/right z)) z)))
+
+(defn next* [z]
+  (when z
+    (let [zz  (zip/next z)
+          zz' (when zz (zip/next zz))]
+      (cond (node* zz)  zz
+            (node* zz') zz'))))
+
+(defn prev* [z]
+  (when z
+    (let [zz  (zip/prev z)
+          zz' (when zz (zip/prev zz))]
+      (cond (node* zz)  zz
+            (node* zz') zz'))))
+
+(defc ztree (zip/zipper vector? rest into tree))
+(defc point (:id (first (zip/node @ztree))))
+
+(cell= (prn (zip/node ztree)))
+
+(defn zkids
+  [ztree]
+  (when (seq (children* ztree))
+    (some->> ztree zip/down (iterate zip/right) (take-while identity))))
+
+(defn zroot
+  [ztree]
+  (->> ztree (iterate zip/up) (take-while identity) last))
+
+(defn znode
+  [ztree]
+  (cell-let [{:keys [id text]} (cell= (first (node* ztree)))]
+    (div
+      (p :click #(reset! point @id)
+         :class (cell= {:point (= id point)})
+         :text text)
+      (ul
+        (loop-tpl
+          :bindings [[i kid] (cell= (indexed (zkids ztree)))]
+          (li (znode kid)))))))
 
 (html
   (head
     (link :href "app.css" :rel "stylesheet"))
   (body
-    (h1 (text "Hello, Hoplon and Castra! ~{rpc/random-number}"))))
+    :keypress #(.log js/console (.fromCharCode js/String (.-which %)))
+    :keypress #(do (case (.fromCharCode js/String (.-which %))
+                     "j" (swap! ztree next*)
+                     "k" (swap! ztree prev*))
+                   (reset! point (:id (first (zip/node @ztree)))))
+    (znode (cell= (zroot ztree)))))
