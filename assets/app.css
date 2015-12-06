@@ -1,10 +1,7 @@
-body {
-  margin: 0;
-  padding: 20px;
-}
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Droid+Serif);
 
-h1 {
-  color: blue;
+body {
+    font-family: 'Droid Sans';
 }
 
 .point {

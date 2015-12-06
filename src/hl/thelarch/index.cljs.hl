@@ -1,7 +1,14 @@
 (page "index.html"
   (:require
     [thelarch.zip :as zip]
-    [thelarch.rpc :as rpc]))
+    [thelarch.rpc :as rpc :refer [user]])
+  (:require-macros
+   [adzerk.env :as env]))
+
+(rpc/init)
+
+(env/def
+  THELARCH_GH_BASIC_CLIENT_ID :required)
 
 (def test-data
   [{:id 1 :text "my org mode document"}
@@ -48,9 +55,10 @@
           point?   (cell= (= item (zip/item tree)))
           editing? (cell= (and point? (= mode :insert)))
           classes  (cell= {:editing editing? :point point?})]
-      (div (p :class classes
-              :toggle (cell= (not editing?))
-              :click #(when (= @mode :normal) (swap! tree zip/goto @z))
+      (div (span
+             :class classes
+             :toggle (cell= (not editing?))
+             :click #(when (= @mode :normal) (swap! tree zip/goto @z))
               text)
            (input :type "text"
                   :toggle editing?
@@ -63,5 +71,9 @@
   (head
     (link :href "app.css" :rel "stylesheet"))
   (body :keyup ctrl-key :keypress cmd-key
-        (p (text "~{mode}"))
-        (node (cell= (zip/root tree)))))
+    (p (text "~{mode}"))
+    (node (cell= (zip/root tree)))
+    (a :href (str "https://github.com/login/oauth/authorize?client_id="
+                  THELARCH_GH_BASIC_CLIENT_ID)
+      "Log in with GitHub")
+    (pre (cell= (str "Current user: " (pr-str user))))))
