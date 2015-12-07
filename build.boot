@@ -18,8 +18,7 @@
   :repositories  #(into % [["datomic" {:url      "https://my.datomic.com/repo"
                                        :username (System/getenv "THELARCH_DATOMIC_REPO_USERNAME")
                                        :password (System/getenv "THELARCH_DATOMIC_REPO_PASSWORD")}]])
-  :resource-paths #{"assets" "src/clj"}
-  :source-paths   #{"src/cljs" "src/hl"})
+  :resource-paths #{"assets" "src/backend" "src/frontend"})
 
 (require
   '[adzerk.boot-cljs         :refer [cljs]]
