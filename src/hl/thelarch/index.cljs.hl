@@ -1,124 +1,64 @@
 (page "index.html"
   (:require
-    [thelarch.zip :as zip]
-    [thelarch.components :as c]
-    [thelarch.rpc :as rpc :refer [user]])
-  (:require-macros
-   [adzerk.env :as env]))
+    [thelarch.edit :as edit]
+    [thelarch.rpc :as rpc :refer [user]]
+    [thelarch.components :as c :include-macros true]))
 
 (rpc/init)
 
-(env/def
-  THELARCH_GH_BASIC_CLIENT_ID :required)
-
-(def test-data
-  [{:id 1 :text "my org mode document"}
-   [{:id 2 :text "a child"}]
-   [{:id 3 :text "another child"}
-    [{:id 4 :text "inner dude the first"}]
-    [{:id 6 :text "inner dude the second"}]
-    [{:id 7 :text "inner dude the third"}]]
-   [{:id 5 :text "yet another child"}]])
-
-(def indexed (partial map-indexed list))
-
-(defc mode :normal)
-(defc tree (zip/zipper test-data))
-
-(def route (route-cell "#!/edit/"))
-
-(defmulti  keymap (fn [mode key] [mode key]))
-(defmethod keymap [:normal "j"] [_ _] (swap! tree zip/next))
-(defmethod keymap [:normal "k"] [_ _] (swap! tree zip/prev))
-(defmethod keymap [:normal ">"] [_ _] (swap! tree zip/indent))
-(defmethod keymap [:normal "<"] [_ _] (swap! tree zip/outdent))
-(defmethod keymap [:normal "x"] [_ _] (swap! tree zip/delete))
-(defmethod keymap [:normal "i"] [_ _] (dosync (swap! tree zip/create-left) (reset! mode :insert)))
-(defmethod keymap [:normal "a"] [_ _] (dosync (swap! tree zip/create-right) (reset! mode :insert)))
-(defmethod keymap [:normal "o"] [_ _] (dosync (swap! tree zip/create-child) (reset! mode :insert)))
-;(defmethod keymap [:normal "O"] [_ _] (dosync (swap! tree zip/create-parent) (reset! mode :insert)))
-(defmethod keymap [:normal "c"] [_ _] (reset! mode :insert))
-(defmethod keymap :default [m k] #_(.log js/console "No %s mode binding for key '%s'" (str m) k))
-
-(defn ctrl-key [e]
-  (let [k (.-which e)]
-    (cond (= 13 k) (swap! mode #(get {:normal :insert} % :normal))
-          (= 27 k) (reset! mode :normal)
-          :else    (let [c (when (.-ctrlKey e) "C-")
-                         m (when (.-metaKey e) "M-")]
-                     (when (or c m) (keymap @mode (str c m (.fromCharCode js/String k))))))))
-
-(defn cmd-key [e]
-  (keymap @mode (.fromCharCode js/String (.-which e))))
-
-(defn node [z]
-  (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
-    (let [kids     (cell= (indexed (zip/children z)))
-          point?   (cell= (= item (zip/item tree)))
-          editing? (cell= (and point? (= mode :insert)))
-          classes  (cell= {:editing editing? :point point?})]
-      (div (span
-             :class classes
-             :toggle (cell= (not editing?))
-             :click #(when (= @mode :normal) (swap! tree zip/goto @z))
-              text)
-           (input :type "text"
-                  :toggle editing?
-                  :focus editing?
-                  :value text
-                  :keypress #(swap! tree zip/set-text @%))
-           (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
-
-(defn login! []
-  (set! (.-location js/window)
-        (str "https://github.com/login/oauth/authorize?client_id="
-             THELARCH_GH_BASIC_CLIENT_ID)))
-
-(defn logout! []
-  (rpc/logout!)
-  (.reload (.-location js/window)))
-
-(html
-  (head
-    (c/bootstrap)
-    (link :href "app.css" :rel "stylesheet"))
-  (body
-    :keyup ctrl-key :keypress cmd-key
-    (c/navbar
-      :title "The Larch" :home "#!/edit/"
-      (c/navbar-nav
-        :route route
-        (a :href "#!/edit/"  "Edit")
-        (a :href "#!/help/"  "Help")
-        (a :href "#!/about/" "About"))
-      (c/navbar-text
-        :toggle user
-        (a :click logout! "Log out"))
-      (c/navbar-text
-        (img :toggle user :src (cell= (:avatar_url user)))
-        (cell= (if user
-                 (:login user)
-                 (a :click login! "Log in with GitHub")))))
-    (c/container
-      (c/main
-        (c/container
-          :toggle (cell= (= route "#!/edit/"))
-          (c/row (node (cell= (zip/root tree)))))
-        (c/container :toggle (cell= (= route "#!/help/"))
-                     (p "Use vi movement keys:")
-                     (ul
-                       (li (code "j") " next item")
-                       (li (code "k") " previous item")
-                       (li (code "c") " edit current item")
-                       (li (code "i") " insert item before point")
-                       (li (code "a") " insert item after point")
-                       (li (code "o") " insert item as child of point")
-                       (li (code ">") " increase indentation level")
-                       (li (code "<") " decrease indentation level")
-                       (li (code "ESC/ENTER") " return to normal mode"))
-                     (p "You can also select items with the mouse by clicking on them."))
-        (c/container :toggle (cell= (= route "#!/about/"))
-                     (p "TheLarch is a keyboard-driven outlining/note-taking tool inspired by Emacs 's org-mode.")
-                     (p "While org-mode is great, it 's difficult to interface org-mode with the rest of the world.  The vision for TheLarch is something like Emacs, but that is hosted on the web and supports integration with other software services, like Google Calendar and Trello.")
-                     (p "Navigation of lists is structural, using Vi movement keys.  Zippers are used to perform traversal.  We also implemented structural Datomic-based persistence of lists - in order to support arbitrary export formats - but it 's unlikely we 'll have that working by contest close")
-                     (p "The application was built using the Hoplon framework combined with Datomic."))))))
+(c/with-route (route-cell "#/edit/")
+  (html
+    (head
+      (c/bootstrap)
+      (link :href "app.css" :rel "stylesheet"))
+    (body
+      :keyup edit/ctrl-key :keypress edit/cmd-key
+      (c/navbar
+        :title "The Larch" :home "#/edit/"
+        (c/navbar-nav
+          (a :href "#/edit/"  "Edit")
+          (a :href "#/help/"  "Help")
+          (a :href "#/about/" "About"))
+        (c/navbar-text
+          :toggle user
+          (a :click rpc/logout! "Log out"))
+        (c/navbar-text
+          (img :toggle user :src (cell= (:avatar_url user)))
+          (cell= (if user
+                   (:login user)
+                   (a :click rpc/login! "Log in with GitHub")))))
+      (c/container
+        (c/main
+          (c/container
+            :route "#/edit/"
+            (c/row (c/node edit/root)))
+          (c/container
+            :route "#/help/"
+            (p "Use vi movement keys:")
+            (ul (li (code "j") " next item")
+                (li (code "k") " previous item")
+                (li (code "c") " edit current item")
+                (li (code "i") " insert item before point")
+                (li (code "a") " insert item after point")
+                (li (code "o") " insert item as child of point")
+                (li (code "x") " delete point")
+                (li (code ">") " increase indentation level")
+                (li (code "<") " decrease indentation level")
+                (li (code "ESC/ENTER") " return to normal mode"))
+            (p "You can also select items with the mouse by clicking on them."))
+          (c/container
+            :route "#/about/"
+            (p "TheLarch is a keyboard-driven outlining/note-taking tool
+                inspired by Emacs 's org-mode.")
+            (p "While org-mode is great, it 's difficult to interface
+                org-mode with the rest of the world. The vision for TheLarch
+                is something like Emacs, but that is hosted on the web and
+                supports integration with other software services, like
+                Google Calendar and Trello.")
+            (p "Navigation of lists is structural, using Vi movement keys.
+                Zippers are used to perform traversal.  We also implemented
+                structural Datomic-based persistence of lists - in order to
+                support arbitrary export formats - but it 's unlikely we'll
+                have that working by contest close")
+            (p "The application was built using the Hoplon framework combined
+                with Datomic.")))))))

@@ -60,6 +60,18 @@
   (or (and (not (zip/left z)) z)
       (-> z (zip/left) (zip/append-child (zip/node z)) zip/right zip/remove (goto z))))
 
+(defn paste-right [z n]
+  (let [n (assoc-in n [0 :id] (gensym))]
+    (if (root? z)
+      (-> z (zip/insert-child n) zip/down)
+      (-> z (zip/insert-right n) zip/right))))
+
+(defn paste-left [z n]
+  (let [n (assoc-in n [0 :is] (gensym))]
+    (if (root? z)
+      (-> z (zip/insert-child n) zip/down)
+      (-> z (zip/insert-left n) zip/left))))
+
 (defn set-text [z x]
   (zip/edit z update-in [0] assoc :text x))
 
@@ -78,8 +90,21 @@
     (-> z (zip/insert-child (make-node "")) zip/down)
     (-> z (zip/insert-right (make-node "")) zip/right)))
 
+(defn create-first [z]
+  (if (root? z)
+    (-> z (zip/insert-child (make-node "")) zip/down)
+    (-> z zip/leftmost create-left)))
+
+(defn create-last [z]
+  (if (root? z)
+    (-> z (zip/insert-child (make-node "")) zip/down)
+    (-> z zip/rightmost create-right)))
+
 (defn create-child [z]
   (-> z (zip/insert-child (make-node "")) zip/down))
 
 (defn create-parent [z]
   )
+
+(def first-sibling zip/leftmost)
+(def last-sibling zip/rightmost)

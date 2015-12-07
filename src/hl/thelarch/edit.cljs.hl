@@ -1,0 +1,64 @@
+(ns thelarch.edit
+  (:refer-clojure :exclude [next])
+  (:require
+    [thelarch.zip :as zip]))
+
+(defc  state  nil)
+(defc  buffer nil)
+(defc  mode   :normal)
+(defc= root   (zip/root state))
+
+(defn set-state! [tree]
+  (reset! state (zip/zipper tree)))
+
+(cell= (pr :buf buffer))
+
+(defn next          [] (swap! state zip/next))
+(defn prev          [] (swap! state zip/prev))
+(defn indent        [] (swap! state zip/indent))
+(defn outdent       [] (swap! state zip/outdent))
+(defn yank          [] (when-not (zip/root? @state) (reset! buffer (zip/node @state))))
+(defn delete        [] (yank) (swap! state zip/delete))
+(defn paste-after   [] (when @buffer (swap! state zip/paste-right @buffer) (reset! buffer nil)))
+(defn mode-insert   [] (reset! mode :insert))
+(defn mode-normal   [] (reset! mode :normal))
+(defn mode-toggle   [] (swap! mode (partial get {:normal :insert}) :normal))
+(defn insert-before [] (dosync (swap! state zip/create-left) (mode-insert)))
+(defn insert-after  [] (dosync (swap! state zip/create-right) (mode-insert)))
+(defn insert-first  [] (dosync (swap! state zip/create-first) (mode-insert)))
+(defn insert-last   [] (dosync (swap! state zip/create-last) (mode-insert)))
+(defn insert-child  [] (dosync (swap! state zip/create-child) (mode-insert)))
+(defn first-sibling [] (swap! state zip/first-sibling))
+(defn last-sibling  [] (swap! state zip/last-sibling))
+
+(defc key-bindings
+  {:normal {"j" next
+            "k" prev
+            ">" indent
+            "<" outdent
+            "x" delete
+            "y" yank
+            "p" paste-after
+            "i" insert-before
+            "a" insert-after
+            "I" insert-first
+            "A" insert-last
+            "o" insert-child
+            "c" mode-insert
+            "^" first-sibling
+            "$" last-sibling}})
+
+(defn cmd [key]
+  ((get-in @key-bindings [@mode key] +)))
+
+(defn ctrl-key [e]
+  (let [k (.-which e)]
+    (cond (= 13 k) (mode-toggle)
+          (= 27 k) (mode-normal)
+          :else    (cmd (let [c (when (.-ctrlKey e) "C-")
+                              m (when (.-metaKey e) "M-")]
+                          (when (or c m) (str c m (.fromCharCode js/String k))))))))
+
+(defn cmd-key [e]
+  (cmd (.fromCharCode js/String (.-which e))))
+

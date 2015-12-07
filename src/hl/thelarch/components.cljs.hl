@@ -1,6 +1,14 @@
 (ns thelarch.components
   (:refer-hoplon :exclude [main])
-  )
+  (:require
+    [thelarch.zip :as zip]
+    [thelarch.edit :as edit]))
+
+(def ^:dynamic *route* nil)
+
+(defmethod do! :route [e _ v]
+  (let [*route* *route*]
+    (e :toggle (cell= (= *route* v)))))
 
 (defelem bootstrap [_ _]
   (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
@@ -13,10 +21,11 @@
                  (span :class "navbar-brand" :href home title))
             (div :id "navbar" :class "navbar-collapse" kids))))
 
-(defelem navbar-nav [{:keys [route]} kids]
-  (ul :class "nav navbar-nav"
-      (->> kids (map #(let [href (.attr (js/jQuery %) "href")]
-                        (li :class (cell= {:active (= route href)}) %))))))
+(defelem navbar-nav [attr kids]
+  (let [*route* *route*]
+    (ul :class "nav navbar-nav"
+        (->> kids (map #(let [href (.attr (js/jQuery %) "href")]
+                          (li :class (cell= {:active (= *route* href)}) %)))))))
 
 (defelem navbar-text [attr kids]
   (span (merge attr {:class "pull-right navbar-text"}) kids))
@@ -29,4 +38,22 @@
 
 (defelem row [attr kids]
   (div (merge attr {:class "row"}) kids))
+
+(defn node [z]
+  (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
+    (let [kids     (cell= (map-indexed list (zip/children z)))
+          point?   (cell= (= item (zip/item edit/state)))
+          editing? (cell= (and point? (= edit/mode :insert)))
+          classes  (cell= {:editing editing? :point point?})]
+      (div (span
+             :class classes
+             :toggle (cell= (not editing?))
+             :click #(when (= @edit/mode :normal) (swap! edit/state zip/goto @z))
+              text)
+           (input :type "text"
+                  :toggle editing?
+                  :focus editing?
+                  :value text
+                  :keypress #(swap! edit/state zip/set-text @%))
+           (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
 
