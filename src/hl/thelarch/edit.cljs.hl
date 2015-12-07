@@ -11,8 +11,6 @@
 (defn set-state! [tree]
   (reset! state (zip/zipper tree)))
 
-(cell= (pr :buf buffer))
-
 (defn next          [] (swap! state zip/next))
 (defn prev          [] (swap! state zip/prev))
 (defn indent        [] (swap! state zip/indent))

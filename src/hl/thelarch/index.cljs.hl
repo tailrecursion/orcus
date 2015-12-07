@@ -19,14 +19,10 @@
           (a :href "#/edit/"  "Edit")
           (a :href "#/help/"  "Help")
           (a :href "#/about/" "About"))
-        (c/navbar-text
-          :toggle user
-          (a :click rpc/logout! "Log out"))
+        (c/navbar-text :toggle user (a :click rpc/logout! "Log out"))
         (c/navbar-text
           (img :toggle user :src (cell= (:avatar_url user)))
-          (cell= (if user
-                   (:login user)
-                   (a :click rpc/login! "Log in with GitHub")))))
+          (cell= (if user (:login user) (a :click rpc/login! "Log in with GitHub")))))
       (c/container
         (c/main
           (c/container
@@ -34,17 +30,24 @@
             (c/row (c/node edit/root)))
           (c/container
             :route "#/help/"
-            (p "Use vi movement keys:")
+            (h4 "Movement:")
             (ul (li (code "j") " next item")
                 (li (code "k") " previous item")
-                (li (code "c") " edit current item")
-                (li (code "i") " insert item before point")
-                (li (code "a") " insert item after point")
-                (li (code "o") " insert item as child of point")
-                (li (code "x") " delete point")
-                (li (code ">") " increase indentation level")
-                (li (code "<") " decrease indentation level")
-                (li (code "ESC/ENTER") " return to normal mode"))
+                (li (code "^") " first sibling")
+                (li (code "$") " last sibling"))
+            (h4 "Indentation:")
+            (ul (li (code ">") " increase indentation level")
+                (li (code "<") " decrease indentation level"))
+            (h4 "Editing:")
+            (ul (li (code "c") " edit current item")
+                (li (code "i") " insert item as previous sibling")
+                (li (code "a") " insert item as next sibling")
+                (li (code "I") " insert item as first sibling")
+                (li (code "A") " insert item as last sibling")
+                (li (code "o") " insert item as child")
+                (li (code "x") " yank and delete current item")
+                (li (code "y") " yank current item into buffer")
+                (li (code "p") " paste buffer contents as next sibling"))
             (p "You can also select items with the mouse by clicking on them."))
           (c/container
             :route "#/about/"
