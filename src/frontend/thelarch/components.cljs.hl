@@ -6,7 +6,7 @@
 
 (def ^:dynamic *route* nil)
 
-(defmethod do! :route [e _ v]
+(defmethod do! :toggle-route [e _ v]
   (let [*route* *route*]
     (e :toggle (cell= (= *route* v)))))
 
@@ -16,7 +16,7 @@
   (let [current-route *route*]
     #(when (= @current-route route) (handler %))))
 
-(defelem bootstrap [_ _]
+(defelem bootstrap-cdn-link [_ _]
   (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
         :integrity "sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" :crossorigin "anonymous"))
 

@@ -1,4 +1,7 @@
-(ns thelarch.components)
+(ns thelarch.components
+  (:require [hoplon.core :as h]))
 
-(defmacro with-route [route & body]
-  `(binding [*route* ~route] ~@body))
+(defmacro html [& body]
+  (let [[_ {:keys [route] :as attr} kids] (h/parse-e (list* '_ body))]
+    `(binding [*route* ~route]
+       (hoplon.core/html ~(dissoc attr :route) ~@kids))))
