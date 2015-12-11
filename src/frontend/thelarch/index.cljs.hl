@@ -6,18 +6,14 @@
 
 (rpc/init)
 
-(defn when-route
-  [route handler]
-  #(when (= @c/*route* route) (handler %)))
-
 (c/with-route (route-cell "#/edit/")
   (html
     (head
-      (c/bootstrap)
+      (c/bootstrap-cdn-link)
       (link :href "app.css" :rel "stylesheet"))
     (body
-      :keyup (when-route "#/edit/" edit/ctrl-key)
-      :keypress (when-route "#/edit/" edit/cmd-key)
+      :keyup (c/wrap-route "#/edit/" edit/ctrl-key)
+      :keypress (c/wrap-route "#/edit/" edit/cmd-key)
       (c/navbar
         :title "The Larch" :home "#/edit/"
         (c/navbar-nav
