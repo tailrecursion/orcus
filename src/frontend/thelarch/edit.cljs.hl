@@ -1,7 +1,8 @@
 (ns thelarch.edit
   (:refer-clojure :exclude [next])
   (:require
-    [thelarch.zip :as zip]))
+    [thelarch.zip :as zip])
+  (:require-macros [thelarch.edit :refer [defn+]]))
 
 (defc  state  nil)
 (defc  buffer nil)
@@ -11,23 +12,23 @@
 (defn set-state! [tree]
   (reset! state (zip/zipper tree)))
 
-(defn next          [] (swap! state zip/next))
-(defn prev          [] (swap! state zip/prev))
-(defn indent        [] (swap! state zip/indent))
-(defn outdent       [] (swap! state zip/outdent))
-(defn yank          [] (when-not (zip/root? @state) (reset! buffer (zip/node @state))))
-(defn delete        [] (yank) (swap! state zip/delete))
-(defn paste-after   [] (when @buffer (swap! state zip/paste-right @buffer) (reset! buffer nil)))
-(defn mode-insert   [] (reset! mode :insert))
-(defn mode-normal   [] (reset! mode :normal))
-(defn mode-toggle   [] (swap! mode (partial get {:normal :insert}) :normal))
-(defn insert-before [] (dosync (swap! state zip/create-left) (mode-insert)))
-(defn insert-after  [] (dosync (swap! state zip/create-right) (mode-insert)))
-(defn insert-first  [] (dosync (swap! state zip/create-first) (mode-insert)))
-(defn insert-last   [] (dosync (swap! state zip/create-last) (mode-insert)))
-(defn insert-child  [] (dosync (swap! state zip/create-child) (mode-insert)))
-(defn first-sibling [] (swap! state zip/first-sibling))
-(defn last-sibling  [] (swap! state zip/last-sibling))
+(defn+ next          "foop" [] (swap! state zip/next))
+(defn+ prev          "foop" [] (swap! state zip/prev))
+(defn+ indent        "foop" [] (swap! state zip/indent))
+(defn+ outdent       "foop" [] (swap! state zip/outdent))
+(defn+ yank          "foop" [] (when-not (zip/root? @state) (reset! buffer (zip/node @state))))
+(defn+ delete        "foop" [] (yank) (swap! state zip/delete))
+(defn+ paste-after   "foop" [] (when @buffer (swap! state zip/paste-right @buffer) (reset! buffer nil)))
+(defn+ mode-insert   "foop" [] (reset! mode :insert))
+(defn+ mode-normal   "foop" [] (reset! mode :normal))
+(defn+ mode-toggle   "foop" [] (swap! mode (partial get {:normal :insert}) :normal))
+(defn+ insert-before "foop" [] (dosync (swap! state zip/create-left) (mode-insert)))
+(defn+ insert-after  "foop" [] (dosync (swap! state zip/create-right) (mode-insert)))
+(defn+ insert-first  "foop" [] (dosync (swap! state zip/create-first) (mode-insert)))
+(defn+ insert-last   "foop" [] (dosync (swap! state zip/create-last) (mode-insert)))
+(defn+ insert-child  "foop" [] (dosync (swap! state zip/create-child) (mode-insert)))
+(defn+ first-sibling "foop" [] (swap! state zip/first-sibling))
+(defn+ last-sibling  "foop" [] (swap! state zip/last-sibling))
 
 (defc key-bindings
   {:normal {"j" next
@@ -46,17 +47,13 @@
             "^" first-sibling
             "$" last-sibling}})
 
-(defn cmd [key]
-  ((get-in @key-bindings [@mode key] +)))
+(defn ctrl-key
+  "Handles ESC and ENTER (bind to keyup event)."
+  [e]
+  (case (.-which e) 13 (mode-toggle) 27 (mode-normal) nil))
 
-(defn ctrl-key [e]
-  (let [k (.-which e)]
-    (cond (= 13 k) (mode-toggle)
-          (= 27 k) (mode-normal)
-          :else    (cmd (let [c (when (.-ctrlKey e) "C-")
-                              m (when (.-metaKey e) "M-")]
-                          (when (or c m) (str c m (.fromCharCode js/String k))))))))
-
-(defn cmd-key [e]
-  (cmd (.fromCharCode js/String (.-which e))))
+(defn cmd-key
+  "Handles editor key presses (bind to keypress event)."
+  [e]
+  ((get-in @key-bindings [@mode (.fromCharCode js/String (.-which e))])))
 
