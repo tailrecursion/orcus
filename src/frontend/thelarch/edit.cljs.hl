@@ -12,6 +12,17 @@
 (defn set-state! [tree]
   (reset! state (zip/zipper tree)))
 
+(def test-state
+  [{:id 1 :text "my org mode document"}
+   [{:id 2 :text "a child"}]
+   [{:id 3 :text "another child"}
+    [{:id 4 :text "inner dude the first"}]
+    [{:id 6 :text "inner dude the second"}]
+    [{:id 7 :text "inner dude the third"}]]
+   [{:id 5 :text "yet another child"}]])
+
+(set-state! test-state)
+
 (defn+ next          "foop" [] (swap! state zip/next))
 (defn+ prev          "foop" [] (swap! state zip/prev))
 (defn+ indent        "foop" [] (swap! state zip/indent))

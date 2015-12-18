@@ -7,7 +7,7 @@
    [ring.util.response       :as response]
    [castra.middleware        :as castra]
    [castra.core              :refer [*session*]]
-   [thelarch.db              :as db]
+   ;; [thelarch.db              :as db]
    [thelarch.api             :as api]
    [thelarch.github          :as gh]
    [ring.middleware.reload   :refer [wrap-reload]]))
@@ -21,7 +21,7 @@
   (GET "/github-callback" {{session-code :code} :params}
     (when-let [access-token (gh/get-access-token session-code)]
       (let [user (gh/get-user access-token)]
-        @(db/register! user)
+        ;; @(db/register! user)
         {:status 302
          :cookies {"access-token" access-token}
          :headers {"location" (format "http://%s/" THELARCH_HOST)}})))
