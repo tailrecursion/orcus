@@ -4,47 +4,6 @@
     [thelarch.zip :as zip]
     [thelarch.edit :as edit]))
 
-(def ^:dynamic *route* nil)
-
-(defmethod do! :toggle-route [e _ v]
-  (let [*route* *route*]
-    (e :toggle (cell= (= *route* v)))))
-
-(defn wrap-route
-  "Wraps event handler such that it is only called when on the given route."
-  [route handler]
-  (let [current-route *route*]
-    #(when (= @current-route route) (handler %))))
-
-(defelem bootstrap-cdn-link [_ _]
-  (link :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" :rel "stylesheet"
-        :integrity "sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" :crossorigin "anonymous"))
-
-(defelem navbar [{:keys [title home]} kids]
-  (nav :class "navbar navbar-inverse navbar-fixed-top"
-       (div :class "container container-fluid"
-            (div :class "navbar-header"
-                 (span :class "navbar-brand" :href home title))
-            (div :id "navbar" :class "navbar-collapse" kids))))
-
-(defelem navbar-nav [attr kids]
-  (let [*route* *route*]
-    (ul :class "nav navbar-nav"
-        (->> kids (map #(let [href (.attr (js/jQuery %) "href")]
-                          (li :class (cell= {:active (= *route* href)}) %)))))))
-
-(defelem navbar-text [attr kids]
-  (span (merge attr {:class "pull-right navbar-text"}) kids))
-
-(defelem container [attr kids]
-  (div (merge attr {:class "container"}) kids))
-
-(defelem main [attr kids]
-  (div (merge attr {:class "main"}) kids))
-
-(defelem row [attr kids]
-  (div (merge attr {:class "row"}) kids))
-
 (defn node [z]
   (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
     (let [kids     (cell= (map-indexed list (zip/children z)))

@@ -6,63 +6,14 @@
 
 (rpc/init)
 
-(c/html
-  :route (route-cell "#/edit/")
+(html
   (head
-    (c/bootstrap-cdn-link)
     (link :href "app.css" :rel "stylesheet"))
   (body
-    :keyup (c/wrap-route "#/edit/" edit/ctrl-key)
-    :keypress (c/wrap-route "#/edit/" edit/cmd-key)
-    (c/navbar
-      :title "The Larch" :home "#/edit/"
-      (c/navbar-nav
-        (a :href "#/edit/"  "Edit")
-        (a :href "#/help/"  "Help")
-        (a :href "#/about/" "About"))
-      (c/navbar-text :toggle user (a :click rpc/logout! "Log out"))
-      (c/navbar-text
-        (img :toggle user :src (cell= (:avatar_url user)))
-        (cell= (if user (:login user) (a :click rpc/login! "Log in with GitHub")))))
-    (c/container
-      (c/main
-        (c/container
-          :toggle-route "#/edit/"
-          (c/row (c/node edit/root)))
-        (c/container
-          :toggle-route "#/help/"
-          (h4 "Movement:")
-          (ul (li (code "j") " next item")
-              (li (code "k") " previous item")
-              (li (code "^") " first sibling")
-              (li (code "$") " last sibling"))
-          (h4 "Indentation:")
-          (ul (li (code ">") " increase indentation level")
-              (li (code "<") " decrease indentation level"))
-          (h4 "Editing:")
-          (ul (li (code "c") " edit current item")
-              (li (code "i") " insert item as previous sibling")
-              (li (code "a") " insert item as next sibling")
-              (li (code "I") " insert item as first sibling")
-              (li (code "A") " insert item as last sibling")
-              (li (code "o") " insert item as child")
-              (li (code "x") " yank and delete current item")
-              (li (code "y") " yank current item into buffer")
-              (li (code "p") " paste buffer contents as next sibling"))
-          (p "You can also select items with the mouse by clicking on them."))
-        (c/container
-          :toggle-route "#/about/"
-          (p "TheLarch is a keyboard-driven outlining/note-taking tool
-             inspired by Emacs 's org-mode.")
-          (p "While org-mode is great, it 's difficult to interface
-             org-mode with the rest of the world. The vision for TheLarch
-             is something like Emacs, but that is hosted on the web and
-             supports integration with other software services, like
-             Google Calendar and Trello.")
-          (p "Navigation of lists is structural, using Vi movement keys.
-             Zippers are used to perform traversal.  We also implemented
-             structural Datomic-based persistence of lists - in order to
-             support arbitrary export formats - but it 's unlikely we'll
-             have that working by contest close")
-          (p "The application was built using the Hoplon framework combined
-             with Datomic."))))))
+    :keyup edit/ctrl-key
+    :keypress edit/cmd-key
+    (div
+      :style "float: right;"
+      (img :style "width: 64px;" :toggle user :src (cell= (:avatar_url user)))
+      (cell= (if user (:login user) (a :click rpc/login! "Log in with GitHub"))))
+    (c/node edit/root)))
