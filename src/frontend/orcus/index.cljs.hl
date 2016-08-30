@@ -5,6 +5,7 @@
 
 (html
   (head
+    (title "orcus")
     (link :href "app.css" :rel "stylesheet"))
   (body
     :keyup edit/ctrl-key
