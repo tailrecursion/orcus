@@ -28,3 +28,11 @@
    (reload)
    (cljs)
    (serve :port 8000)))
+
+(deftask prod
+  "Build orcus for production deployment."
+  []
+  (comp
+   (hoplon)
+   (cljs :optimizations :advanced)
+   (target :dir #{"target"})))
