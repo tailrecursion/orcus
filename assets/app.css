@@ -2,7 +2,7 @@
   font-family: 'Fira Mono';
   font-style: normal;
   font-weight: 400;
-  src: local('Fira Mono'), local('FiraMono'), url('/fira-mono.ttf') format('truetype');
+  src: local('Fira Mono'), local('FiraMono'), url('fira-mono.ttf') format('truetype');
 }
 
 #root {
