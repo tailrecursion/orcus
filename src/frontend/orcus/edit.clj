@@ -1,4 +1,4 @@
-(ns thelarch.edit)
+(ns orcus.edit)
 
 (defmacro defn+ [name doc bind & body]
   `(def ~name (with-meta (fn ~bind ~@body) {:doc ~doc})))

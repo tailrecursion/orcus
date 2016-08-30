@@ -1,4 +1,4 @@
-# thelarch
+# orcus
 
 A [Hoplon][4] project with [Castra][2] designed to...well, that part is up to you.
 

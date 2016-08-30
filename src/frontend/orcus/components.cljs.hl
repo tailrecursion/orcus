@@ -1,0 +1,25 @@
+(ns orcus.components
+  (:refer-hoplon :exclude [main])
+  (:require
+    [orcus.zip :as zip]
+    [orcus.edit :as edit]))
+
+(defn node [z]
+  (cell-let [{:keys [id text editing] :as item} (cell= (zip/item z))]
+    (let [kids     (cell= (map-indexed list (zip/children z)))
+          point?   (cell= (= item (zip/item edit/state)))
+          editing? (cell= (and point? (= edit/mode :insert)))
+          classes  (cell= {:editing editing? :point point?})]
+      (div :class "node"
+        (span
+          :class classes
+          :toggle (cell= (not editing?))
+          :click #(when (= @edit/mode :normal) (swap! edit/state zip/goto @z))
+          text)
+        (input :type "text"
+          :toggle editing?
+          :focus editing?
+          :value text
+          :keypress #(swap! edit/state zip/set-text @%))
+        (ul (loop-tpl :bindings [[i kid] kids] (li (node kid))))))))
+

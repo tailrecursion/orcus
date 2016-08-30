@@ -1,0 +1,13 @@
+(page "index.html"
+  (:require
+    [orcus.edit :as edit]
+    [orcus.components :as c :include-macros true]))
+
+(html
+  (head
+    (link :href "app.css" :rel "stylesheet"))
+  (body
+    :keyup edit/ctrl-key
+    :keypress edit/cmd-key 
+    (div :id "root"
+      (c/node edit/root))))

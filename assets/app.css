@@ -1,19 +1,19 @@
-.navbar-text img {
-  max-height:25px;
-  width:auto;
-  vertical-align:middle;
-  padding-right: 10px;
-}
-body {
-    padding-top: 50px;
-}
-.main {
-  padding: 40px 15px;
-}
-.point {
-  color: red;
+@font-face {
+  font-family: 'Fira Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Fira Mono'), local('FiraMono'), url('/fira-mono.ttf') format('truetype');
 }
 
-.editing {
-  border: 1px dashed red;
+#root {
+  font-family: 'Fira Mono', monospace;
+}
+#root .point {
+  color: red;
+}
+#root input {
+    font-family: inherit;
+}
+#root div .node {
+    cursor: pointer;
 }

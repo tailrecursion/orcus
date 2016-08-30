@@ -1,8 +1,8 @@
-(ns thelarch.edit
+(ns orcus.edit
   (:refer-clojure :exclude [next])
   (:require
-    [thelarch.zip :as zip])
-  (:require-macros [thelarch.edit :refer [defn+]]))
+    [orcus.zip :as zip])
+  (:require-macros [orcus.edit :refer [defn+]]))
 
 (defc  state  nil)
 (defc  buffer nil)
